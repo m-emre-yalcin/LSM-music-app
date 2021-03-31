@@ -1,31 +1,17 @@
 <template>
   <div class="music-list-container">
     <div class="list">
-      <div class="item" v-for="(music, i) in musicFiles" :key="i">
-        {{ music }}
+      <div :class="{ item: true, active: i==currentMusic.index }" v-for="(music, i) in musicFiles" :key="i" @click="playMusic(i)">
+        <div class="column">{{ i+1 }}</div>
+        <div class="column">{{ music.name }}</div>
       </div>
     </div>
 
-    <div class="player-container" v-if="musicFiles.length">
-      <!-- <audio :src="'D:/Music/' + musicFiles[currentMusic.index].name" controls></audio> -->
-
-      <div class="row justify-around">
-        <span class="btn prev" @click="prev(currentMusic)">
-          <Previous width="20" class="light" />
-        </span>
-        <span class="btn stop" @click="play(currentMusic)">
-          <Play width="20" class="light" />
-        </span>
-        <span class="btn next" @click="next(currentMusic)">
-          <Next width="20" class="light" />
-        </span>
-      </div>
-
-      <div class="row center player column">
-        <div class="title">{{ currentMusic.name() }}</div>
-        <progress :value="currentMusic.state" :max="currentMusic.maxDuration"></progress>
-      </div>
-    </div>
+    <Music-Player
+      v-if="musicFiles.length"
+      :currentMusic="currentMusic"
+      @change-music-state="({index, playing}) => playMusic(index, playing)"
+    />
   </div>
 </template>
 
@@ -33,17 +19,11 @@
 import { readdir } from 'fs'
 import { join } from 'path'
 
-import Next from '../assets/icons/next.svg'
-import Previous from '../assets/icons/previous.svg'
-// import Pause from '../assets/icons/pause.svg'
-import Play from '../assets/icons/play.svg'
+import MusicPlayer from '../components/music-player'
 export default {
   name: 'MusicList',
   components: {
-    Next,
-    Previous,
-    // Pause,
-    Play
+    MusicPlayer
   },
   data () {
     return {
@@ -51,27 +31,27 @@ export default {
       musicFiles: [],
       currentMusic: {
         index: 0,
+        name: null,
+        path: null,
         playing: false,
-        name: () => this.musicFiles[this.currentMusic.index].name,
-        maxDuration: 400,
-        state: 253
+        maxDuration: 422,
+        curDuration: 322
+        // audio,
       }
     }
   },
   methods: {
-    play (currentMusic) {
-      new Audio(this.musicFiles[currentMusic.index].path).play()
-    },
-    prev (currentMusic) {
-      if (currentMusic.index > 0) {
-        currentMusic.index--
+    playMusic (index, playing) {
+      if (typeof index !== 'undefined') this.$set(this.currentMusic, 'index', index)
+      if (typeof playing !== 'undefined') this.$set(this.currentMusic, 'playing', playing)
+      if (typeof this.musicFiles[index] !== 'undefined') {
+        this.$set(this.currentMusic, 'path', this.musicFiles[index].path)
+        this.$set(this.currentMusic, 'name', this.musicFiles[index].name)
       }
-    },
-    next (currentMusic) {
-      currentMusic.index++
     }
   },
   async mounted () {
+    // get music files
     this.musicFiles = await this.$db.musicFiles.toArray()
 
     if (this.musicFiles.length === 0) {
@@ -97,6 +77,10 @@ export default {
 
         this.musicFiles = files
       })
+    } else {
+      // set first music
+      this.currentMusic.name = this.musicFiles[this.currentMusic.index].name
+      this.currentMusic.path = this.musicFiles[this.currentMusic.index].path
     }
   }
 }
@@ -105,30 +89,32 @@ export default {
 <style lang="sass" scoped>
 .music-list-container
   position: relative
-.player-container
-  position: fixed
-  bottom: 0
-  left: 0
-  right: 0
-  padding: 16px 4px 8px 4px
-  z-index: 1
-  background-color: var(--color-black-100)
-  display: flex
-  justify-content: space-around
-  flex-direction: column
-  .btn
-    cursor: pointer
-    opacity: .7
-    transition: opacity .15s
-    &:hover
-      opacity: 1
-      box-shadow: 0 0 5px #000
-    &:focus
-      box-shadow: 0 0 5px #666
-      opacity: 1
-  .player
-    margin: 4px 0
-    .title
-      padding: 2px
-      color: var(--color-white-100)
+  .list
+    padding-bottom: 94px
+    -webkit-overflow-scrolling: touch
+    display: flex
+    flex-direction: column
+    scroll-snap-type: both mandatory
+    .item
+      scroll-snap-align: start
+      padding: 8px 4px
+      text-align: left
+      display: flex
+      align-items: center
+      height: 40px
+      color: #999
+      background-color: #fff
+      border-top: 1px solid #eee
+      border-bottom: 1px solid #eee
+      &:hover
+        background-color: #fafafa
+        color: #666
+        cursor: pointer
+      .column
+        padding: 4px
+    .item.active
+      background-color: #000
+      color: #fff
+      border-top: 1px solid #aaa
+      border-bottom: 1px solid #aaa
 </style>
