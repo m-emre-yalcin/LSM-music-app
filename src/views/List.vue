@@ -1,16 +1,22 @@
 <template>
   <div class="music-list-container">
     <div class="list">
-      <div :class="{ item: true, active: i==currentMusic.index }" v-for="(music, i) in musicFiles" :key="i" @click="playMusic(i)">
-        <div class="column">{{ i+1 }}</div>
+      <div
+        :class="{ item: true, active: i == currentMusicIndex }"
+        v-for="(music, i) in musicFiles"
+        :key="i"
+        @click="currentMusicIndex = i"
+      >
+        <div class="column">{{ i + 1 }}</div>
         <div class="column">{{ music.name }}</div>
       </div>
     </div>
 
     <Music-Player
       v-if="musicFiles.length"
-      :currentMusic="currentMusic"
-      @change-music-state="({index, playing}) => playMusic(index, playing)"
+      :musicFiles="musicFiles"
+      :currentMusicIndex="currentMusicIndex"
+      @change-music-index="currentMusicIndex = $event"
     />
   </div>
 </template>
@@ -29,25 +35,7 @@ export default {
     return {
       musicDir: 'D:/Music/',
       musicFiles: [],
-      currentMusic: {
-        index: 0,
-        name: null,
-        path: null,
-        playing: false,
-        maxDuration: 422,
-        curDuration: 322
-        // audio,
-      }
-    }
-  },
-  methods: {
-    playMusic (index, playing) {
-      if (typeof index !== 'undefined') this.$set(this.currentMusic, 'index', index)
-      if (typeof playing !== 'undefined') this.$set(this.currentMusic, 'playing', playing)
-      if (typeof this.musicFiles[index] !== 'undefined') {
-        this.$set(this.currentMusic, 'path', this.musicFiles[index].path)
-        this.$set(this.currentMusic, 'name', this.musicFiles[index].name)
-      }
+      currentMusicIndex: 0
     }
   },
   async mounted () {
@@ -77,10 +65,6 @@ export default {
 
         this.musicFiles = files
       })
-    } else {
-      // set first music
-      this.currentMusic.name = this.musicFiles[this.currentMusic.index].name
-      this.currentMusic.path = this.musicFiles[this.currentMusic.index].path
     }
   }
 }
