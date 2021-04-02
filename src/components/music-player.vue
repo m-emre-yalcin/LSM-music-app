@@ -1,6 +1,6 @@
 <template>
-  <div class="player-container" v-if="musicFiles.length">
-    <div class="row justify-around">
+  <div class="player-container music-player" v-if="musicFiles.length">
+    <div class="row justify-between controls">
       <span class="btn prev" @click="prev()">
         <Previous width="20" class="light" />
       </span>
@@ -24,12 +24,31 @@
         <div
           class="track"
           :style="{
-            width: (currentTime / duration) * 100 + '%',
+            width: ((currentTime / duration) * 100).toFixed(1) + '%',
           }"
-        ></div>
+        />
         <div class="pointer" />
       </div>
-      <div class="volume"></div>
+      <div class="row justify-around" style="padding-top: 6px">
+        <div :class="{ shuffle: true, active: shuffle }" @click="shuffleAll()">
+          <Shuffle />
+        </div>
+
+        <div
+          class="volume"
+          @click.stop.prevent="changeCurrentVolume($event)"
+          @dragend="changeCurrentVolume($event)"
+        >
+          <Volume />
+          <div
+            class="track"
+            :style="{
+              width: currentVolume * 100 + '%',
+            }"
+          />
+          <div class="pointer"></div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -39,6 +58,8 @@ import Next from '../assets/icons/next.svg'
 import Previous from '../assets/icons/previous.svg'
 import Pause from '../assets/icons/pause.svg'
 import Play from '../assets/icons/play.svg'
+import Volume from '../assets/icons/volume.svg'
+import Shuffle from '../assets/icons/shuffle.svg'
 
 const Music = new Audio()
 export default {
@@ -46,7 +67,9 @@ export default {
     Next,
     Previous,
     Pause,
-    Play
+    Play,
+    Volume,
+    Shuffle
   },
   props: {
     musicFiles: Array,
@@ -59,7 +82,10 @@ export default {
     return {
       state: 'pause',
       currentTime: 0,
-      duration: 0
+      duration: 0,
+      currentVolume: 1,
+      interval: null,
+      shuffle: false
     }
   },
   filters: {
@@ -83,10 +109,17 @@ export default {
   },
   methods: {
     play () {
-      if (this.state === 'playing') {
-        Music.pause()
-      } else {
+      if (this.state === 'pause') {
+        this.state = 'playing'
         Music.play()
+        this.interval = setInterval(() => {
+          this.currentTime = Music.currentTime
+          this.duration = Music.duration
+        }, 1000)
+      } else if (this.state === 'playing') {
+        this.state = 'pause'
+        Music.pause()
+        clearInterval(this.interval)
       }
     },
     prev () {
@@ -96,78 +129,71 @@ export default {
       }
     },
     next () {
-      const index = this.currentMusicIndex + 1
-      if (index < this.musicFiles.length) {
+      let index
+
+      if (this.shuffle) {
+        index = Math.floor(Math.random() * this.musicFiles.length)
         this.$emit('change-music-index', index)
+      } else {
+        index = this.currentMusicIndex + 1
+        if (index < this.musicFiles.length) {
+          this.$emit('change-music-index', index)
+        }
       }
     },
     changeCurrentTime (e) {
       const progressDOM = document.querySelector('.progress')
       const currentTime =
-        Music.duration * ((e.layerX - 8) / progressDOM.clientWidth)
+        Music.duration * (e.layerX / progressDOM.clientWidth)
       Music.currentTime = currentTime
       this.currentTime = currentTime
+    },
+    changeCurrentVolume (e) {
+      const volumeDOM = document.querySelector('.volume')
+      let currentVolume = Number(
+        ((e.layerX - 1) / volumeDOM.clientWidth).toFixed(1)
+      )
+      if (currentVolume > 1) currentVolume = 1
+
+      Music.volume = currentVolume
+      this.currentVolume = currentVolume
+    },
+    audioController (newIndex, oldIndex) {
+      Music.src = this.musicFiles[newIndex].path
+      if (newIndex !== oldIndex || typeof oldIndex === 'undefined') {
+        if (this.state === 'playing') {
+          Music.play()
+        } else Music.pause()
+      }
+    },
+    shuffleAll () {
+      this.shuffle = true
     }
   },
   watch: {
     currentMusicIndex (newIndex, oldIndex) {
-      Music.src = this.musicFiles[newIndex].path
-      if (newIndex !== oldIndex) {
-        if (this.state === 'playing') {
-          Music.play()
-          setTimeout(() => {
-            this.duration = Music.duration
-            this.currentTime = Music.currentTime
-          }, 100)
-        } else Music.pause()
-      }
-    },
-    state (newB, oldB) {
-      let interval
-      if (newB !== oldB) {
-        if (newB === 'playing') {
-          interval = setInterval(() => {
-            this.currentTime = Music.currentTime
-          }, 1000)
-
-          this.duration = Music.duration
-        } else if (newB === 'pause') {
-          clearInterval(interval)
-        }
-      }
+      this.audioController(newIndex, oldIndex)
     }
   },
   mounted () {
     if (this.musicFiles.length) {
-      Music.src = this.musicFiles[this.currentMusicIndex].path
+      this.audioController(this.currentMusicIndex)
 
-      // set current music timing
-      this.duration = Music.duration
-      this.currentTime = Music.currentTime
-
-      Music.addEventListener('play', () => {
-        this.state = 'playing'
+      Music.addEventListener('loadeddata', () => {
+        this.duration = Music.duration
+        this.currentTime = Music.currentTime
       })
-      Music.addEventListener('playing', () => {
-        this.state = 'playing'
-      })
-      Music.addEventListener('pause', () => {
-        this.state = 'pause'
-      })
+      // Music.addEventListener('play', () => {
+      //   this.state = 'playing'
+      // })
+      // Music.addEventListener('playing', () => {
+      //   this.state = 'playing'
+      // })
+      // Music.addEventListener('pause', () => {
+      //   this.state = 'pause'
+      // })
       Music.addEventListener('ended', () => {
-        Music.pause()
-
-        const index = this.currentMusicIndex + 1
-        this.$emit('change-music-index', index)
-
-        Music.src = this.musicFiles[this.currentMusicIndex].path
-        setTimeout(() => {
-          Music.play()
-          setTimeout(() => {
-            this.duration = Music.duration
-            this.currentTime = Music.currentTime
-          }, 100)
-        }, 100)
+        this.next()
       })
     }
   }
@@ -177,32 +203,43 @@ export default {
 <style lang="sass" scoped>
 .player-container
   position: fixed
-  bottom: 0
   left: 0
   right: 0
+  bottom: 0
+  overflow: hidden
   padding: 16px 4px 8px 4px
   z-index: 1
   background-color: var(--color-black-100)
   display: flex
   justify-content: space-around
   flex-direction: column
-  .btn
-    cursor: pointer
-    opacity: .7
-    transition: opacity .15s
-    &:hover
-      opacity: 1
-      box-shadow: 0 0 5px #000
-    &:focus
-      box-shadow: 0 0 5px #666
-      opacity: 1
+  background-color: rgba(0,0,0,.6)
+  -webkit-backdrop-filter: blur(8px)
+  backdrop-filter: blur(8px)
+  box-shadow: 0 -4px 20px #000
+  border-top: 1px solid #333
+  .controls
+    width: 57.5%
+    margin: 0 auto
+    .btn
+      cursor: pointer
+      opacity: .7
+      transition: opacity .15s
+      &:hover
+        opacity: 1
+        box-shadow: 0 0 5px #000
+      &:focus
+        box-shadow: 0 0 5px #666
+        opacity: 1
   .player
     margin: 4px 0
     .title
       padding: 2px
-      color: var(--color-white-100)
-    .progress
+      white-space: nowrap
+      overflow-x: auto
       width: 90%
+      color: var(--color-white-100)
+    .progress, .volume
       background: -moz-linear-gradient(180deg, black 0%, black 40%, #666 40%, #666 60%, black 60%, black 100%)
       background: -webkit-linear-gradient(180deg, black 0%, black 40%, #666 40%, #666 60%, black 60%, black 100%)
       background: linear-gradient(180deg, black 0%, black 40%, #666 40%, #666 60%, black 60%, black 100%)
@@ -215,24 +252,52 @@ export default {
         color: white
         position: absolute
       &::before
-        left: -30px
+        left: -35px
         content: attr(currentTime)
       &::after
-        right: -30px
+        right: -45px
         content: attr(duration)
       .track
+        width: 100%
         height: 10px
-        transition: width .2s
-        background: -moz-linear-gradient(180deg, black 0%, black 40%, white 40%, white 60%, black 60%, black 100%)
-        background: -webkit-linear-gradient(180deg, black 0%, black 40%, white 40%, white 60%, black 60%, black 100%)
-        background: linear-gradient(180deg, black 0%, black 40%, white 40%, white 60%, black 60%, black 100%)
+        transition: width .1s
+        background: -moz-linear-gradient(180deg, black 0%, black 40%, #D7276F 40%, #D7276F 60%, black 60%, black 100%)
+        background: -webkit-linear-gradient(180deg, black 0%, black 40%, #D7276F 40%, #D7276F 60%, black 60%, black 100%)
+        background: linear-gradient(180deg, black 0%, black 40%, #D7276F 40%, #D7276F 60%, black 60%, black 100%)
         &:hover
           background-color: #fafafa
       .pointer
         width: 8px
         height: 8px
+        margin-left: -4px
         border-radius: 2px
         background-color: #fff
         border: 1px solid #eee
         cursor: pointer
+        &:focus
+          cursor: pointer
+    .progress
+      width: 50%
+    .volume
+      width: 120px
+      // background: none
+      &::before, &::after
+        content: none
+      svg
+        position: absolute
+        left: -25px
+        width: 20px
+        height: 20px
+        fill: white
+        margin-right: 8px
+    .shuffle
+      cursor: pointer
+      opacity: .5
+      transition: opacity .5s ease
+      &.active
+        opacity: 1
+      svg
+        width: 25px
+        height: 25px
+        fill: white
 </style>

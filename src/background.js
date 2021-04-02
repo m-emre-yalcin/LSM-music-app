@@ -1,8 +1,10 @@
 'use strict'
 
-import { app, protocol, BrowserWindow } from 'electron'
+import { app, protocol, BrowserWindow, globalShortcut } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
+import { join } from 'path'
+
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Scheme must be registered before the app is ready
@@ -15,12 +17,16 @@ async function createWindow () {
   const win = new BrowserWindow({
     width: 1200,
     height: 600,
+    minWidth: 300,
+    minHeight: 300,
     center: true,
-    thickFrame: true,
-    hasShadow: true,
+    titleBarStyle: 'hidden',
+    frame: false,
+    icon: join(__dirname, 'lysosome-icon.png'),
     webPreferences: {
       webSecurity: false,
       images: true,
+      enableRemoteModule: true,
       // Use pluginOptions.nodeIntegration, leave this alone
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION
@@ -75,6 +81,19 @@ app.on('ready', async () => {
       console.error('ERROR: registerLocalResourceProtocol: Could not get file path:', error)
     }
   })
+
+  // globalShortcut.register('MediaStop', () => {
+  //   console.log('stop')
+  // })
+  // globalShortcut.register('MediaPlayPause', () => {
+  //   console.log('play/pause')
+  // })
+  // globalShortcut.register('MediaNextTrack', () => {
+  //   console.log('next')
+  // })
+  // globalShortcut.register('MediaPreviousTrack', () => {
+  //   console.log('prev')
+  // })
 
   createWindow()
 })

@@ -1,9 +1,26 @@
+*
+  -webkit-user-select: none // nothing is selectable
+
+// scrollbars
+::-webkit-scrollbar
+  width: 10px
+  height: 10px
+::-webkit-scrollbar-track
+  background-color: #000
+::-webkit-scrollbar-thumb
+  background-color: #333
+  &:hover
+    background-color: #444
+
+
 body
   margin: 0
+.container-after-titlebar
+  margin-top: -1px
+  overflow: hidden !important
 
 svg.light
   fill: var(--color-white-100)
-
 
 // structure
 .row

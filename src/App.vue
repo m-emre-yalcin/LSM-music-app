@@ -1,8 +1,18 @@
 <template>
   <div id="app">
-    <router-view/>
+    <Titlebar />
+    <router-view />
   </div>
 </template>
+
+<script>
+import Titlebar from './components/titlebar'
+export default {
+  components: {
+    Titlebar
+  }
+}
+</script>
 
 <style lang="sass">
 #app
