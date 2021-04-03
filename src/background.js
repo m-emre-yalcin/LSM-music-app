@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, globalShortcut } from 'electron'
+import { app, protocol, BrowserWindow, globalShortcut, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import { join } from 'path'
@@ -33,6 +33,25 @@ async function createWindow () {
     }
   })
 
+  // globalShortcut.register('MediaStop', () => {
+  //   console.log('stop')
+  // })
+  globalShortcut.register('numadd', () => {
+    win.webContents.send('MediaPlayer', { action: 'volume++' })
+  })
+  globalShortcut.register('numsub', () => {
+    win.webContents.send('MediaPlayer', { action: 'volume--' })
+  })
+  globalShortcut.register('MediaPlayPause', () => {
+    win.webContents.send('MediaPlayer', { action: 'play/pause' })
+  })
+  globalShortcut.register('MediaNextTrack', () => {
+    win.webContents.send('MediaPlayer', { action: 'nextTrack' })
+  })
+  globalShortcut.register('MediaPreviousTrack', () => {
+    win.webContents.send('MediaPlayer', { action: 'prevTrack' })
+  })
+
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
@@ -41,6 +60,10 @@ async function createWindow () {
     createProtocol('app')
     // Load the index.html when not in development
     win.loadURL('app://./index.html')
+
+    // win.webContents.on('dom-ready', () => {
+
+    // })
   }
 }
 
@@ -81,20 +104,6 @@ app.on('ready', async () => {
       console.error('ERROR: registerLocalResourceProtocol: Could not get file path:', error)
     }
   })
-
-  // globalShortcut.register('MediaStop', () => {
-  //   console.log('stop')
-  // })
-  // globalShortcut.register('MediaPlayPause', () => {
-  //   console.log('play/pause')
-  // })
-  // globalShortcut.register('MediaNextTrack', () => {
-  //   console.log('next')
-  // })
-  // globalShortcut.register('MediaPreviousTrack', () => {
-  //   console.log('prev')
-  // })
-
   createWindow()
 })
 

@@ -8,8 +8,11 @@ export default {
     }
   },
   mutations: {
-    updateValue (state, payload) {
-      state.value = payload
+    'next-music-index' (state) {
+      console.log()
+    },
+    'prev-music-index' (state) {
+
     }
   },
   actions: {

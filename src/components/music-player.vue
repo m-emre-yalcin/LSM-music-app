@@ -97,6 +97,7 @@ import Play from '../assets/icons/play.svg'
 import Volume from '../assets/icons/volume.svg'
 import Shuffle from '../assets/icons/shuffle.svg'
 
+import { ipcRenderer } from 'electron'
 export default {
   components: {
     Next,
@@ -145,10 +146,10 @@ export default {
       }
     },
     prev () {
-      const index = this.$store.state.currentMusicIndex - 1
-      if (index >= 0) {
-        this.$store.commit('change-music-index', index)
-      }
+      this.$store.commit(
+        'change-music-index',
+        this.$store.state.currentMusicIndex - 1
+      )
     },
     next () {
       let index
@@ -206,6 +207,23 @@ export default {
         this.currentVolume = currentVolume
       }
     },
+    volume (symbol) {
+      if (symbol === '++') {
+        if (this.$store.state.Music.volume < 0.9) {
+          this.$store.state.Music.volume += 0.1
+        } else {
+          this.$store.state.Music.volume = 1
+        }
+      } else if (symbol === '--') {
+        if (this.$store.state.Music.volume > 0.1) {
+          this.$store.state.Music.volume -= 0.1
+        } else {
+          this.$store.state.Music.volume = 0
+        }
+      }
+
+      this.currentVolume = this.$store.state.Music.volume
+    },
     shuffleAll () {
       this.shuffle = true
     }
@@ -230,6 +248,26 @@ export default {
       setTimeout(() => {
         this.next()
       }, 3000)
+    })
+
+    ipcRenderer.on('MediaPlayer', (event, { action }) => {
+      switch (action) {
+        case 'play/pause':
+          this.play()
+          break
+        case 'nextTrack':
+          this.next()
+          break
+        case 'prevTrack':
+          this.prev()
+          break
+        case 'volume++':
+          this.volume('++')
+          break
+        case 'volume--':
+          this.volume('--')
+          break
+      }
     })
   }
 }
