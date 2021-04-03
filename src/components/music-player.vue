@@ -13,40 +13,67 @@
       </span>
     </div>
 
-    <div class="row center player column">
+    <div
+      class="row center player column"
+      @mousedown="enterMusicTrack = true"
+      @mouseleave="enterMusicTrack = false"
+      @mouseup="enterMusicTrack = false"
+    >
       <div class="title">{{ musicFiles[currentMusicIndex].name }}</div>
       <div
         class="progress"
+        ref="progress"
         :currentTime="currentTime | secondsToHms"
         :duration="duration | secondsToHms"
-        @click.stop.prevent="changeCurrentTime($event)"
+        @click="changeDuration($event, $refs.progress)"
+        @mousemove="
+          enterMusicTrack ? changeDuration($event, $refs.progress) : false
+        "
       >
-        <div
-          class="track"
-          :style="{
-            width: ((currentTime / duration) * 100).toFixed(1) + '%',
-          }"
-        />
-        <div class="pointer" />
+        <div class="track-container">
+          <div
+            :class="{ 'track-flow': true, 'transition-flow': !enterMusicTrack }"
+            :style="{
+              width: (currentTime / duration) * 100 + '%',
+            }"
+          />
+        </div>
       </div>
       <div class="row justify-around" style="padding-top: 6px">
         <div :class="{ shuffle: true, active: shuffle }" @click="shuffleAll()">
           <Shuffle />
         </div>
 
-        <div
-          class="volume"
-          @click.stop.prevent="changeCurrentVolume($event)"
-          @dragend="changeCurrentVolume($event)"
-        >
-          <Volume />
-          <div
-            class="track"
-            :style="{
-              width: currentVolume * 100 + '%',
+        <div class="volume-container">
+          <Volume
+            :class="{
+              [`layer-${Math.ceil((currentVolume * 100) / 33.3)}`]: true,
             }"
+            @click="changeVolume($event, $refs.volume, true)"
           />
-          <div class="pointer"></div>
+          <div
+            class="volume"
+            ref="volume"
+            @mousedown="enterVolumeTrack = true"
+            @mouseleave="enterVolumeTrack = false"
+            @mouseup="enterVolumeTrack = false"
+            @click="changeVolume($event, $refs.volume)"
+            @mousemove="
+              enterMusicTrack ? changeVolume($event, $refs.volume) : false
+            "
+          >
+            <div class="track-container">
+              <div
+                :class="{
+                  'track-flow': true,
+                  'transition-flow': !enterVolumeTrack,
+                }"
+                :style="{
+                  width: Math.round(currentVolume * 100) + '%',
+                }"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -85,7 +112,9 @@ export default {
       duration: 0,
       currentVolume: 1,
       interval: null,
-      shuffle: false
+      shuffle: false,
+      enterMusicTrack: false,
+      enterVolumeTrack: false
     }
   },
   filters: {
@@ -141,22 +170,44 @@ export default {
         }
       }
     },
-    changeCurrentTime (e) {
-      const progressDOM = document.querySelector('.progress')
+    changeDuration (e, progressDOM) {
       const currentTime =
-        Music.duration * (e.layerX / progressDOM.clientWidth)
-      Music.currentTime = currentTime
-      this.currentTime = currentTime
-    },
-    changeCurrentVolume (e) {
-      const volumeDOM = document.querySelector('.volume')
-      let currentVolume = Number(
-        ((e.layerX - 1) / volumeDOM.clientWidth).toFixed(1)
-      )
-      if (currentVolume > 1) currentVolume = 1
+        Music.duration * (e.layerX / progressDOM.clientWidth) + 3
 
-      Music.volume = currentVolume
-      this.currentVolume = currentVolume
+      if (currentTime < 0) {
+        // duration below 0
+        Music.currentTime = 0
+        this.currentTime = 0
+      } else if (Music.duration < currentTime) {
+        // limit exceed duration
+        Music.currentTime = this.duration
+        this.currentTime = this.duration
+      } else {
+        Music.currentTime = currentTime
+        this.currentTime = currentTime
+      }
+    },
+    changeVolume (e, volumeDOM, auto) {
+      if (auto) {
+        if (Music.volume < 0.33) {
+          Music.volume = 1
+        } else {
+          if (this.currentVolume - 0.33 > 0) {
+            Music.volume = Music.volume - 0.33
+          } else {
+            Music.volume = 0
+          }
+        }
+
+        this.currentVolume = Math.round(Music.volume * 10) / 10
+      } else {
+        let currentVolume = Number((e.layerX + 3) / volumeDOM.clientWidth)
+        if (currentVolume > 1) currentVolume = 1
+        else if (currentVolume < 0) currentVolume = 0
+
+        Music.volume = currentVolume
+        this.currentVolume = currentVolume
+      }
     },
     audioController (newIndex, oldIndex) {
       Music.src = this.musicFiles[newIndex].path
@@ -193,7 +244,9 @@ export default {
       //   this.state = 'pause'
       // })
       Music.addEventListener('ended', () => {
-        this.next()
+        setTimeout(() => {
+          this.next()
+        }, 3000)
       })
     }
   }
@@ -240,56 +293,76 @@ export default {
       width: 90%
       color: var(--color-white-100)
     .progress, .volume
-      background: -moz-linear-gradient(180deg, black 0%, black 40%, #666 40%, #666 60%, black 60%, black 100%)
-      background: -webkit-linear-gradient(180deg, black 0%, black 40%, #666 40%, #666 60%, black 60%, black 100%)
-      background: linear-gradient(180deg, black 0%, black 40%, #666 40%, #666 60%, black 60%, black 100%)
       display: flex
       align-items: center
       cursor: pointer
       position: relative
+      padding: 10px 0
       &::before, &::after
         font-size: 10px
         color: white
         position: absolute
+        pointer-events: none
       &::before
-        left: -35px
+        left: -45px
         content: attr(currentTime)
       &::after
         right: -45px
         content: attr(duration)
-      .track
+      .track-container
         width: 100%
-        height: 10px
-        transition: width .1s
-        background: -moz-linear-gradient(180deg, black 0%, black 40%, #D7276F 40%, #D7276F 60%, black 60%, black 100%)
-        background: -webkit-linear-gradient(180deg, black 0%, black 40%, #D7276F 40%, #D7276F 60%, black 60%, black 100%)
-        background: linear-gradient(180deg, black 0%, black 40%, #D7276F 40%, #D7276F 60%, black 60%, black 100%)
-        &:hover
-          background-color: #fafafa
-      .pointer
-        width: 8px
-        height: 8px
-        margin-left: -4px
-        border-radius: 2px
-        background-color: #fff
-        border: 1px solid #eee
-        cursor: pointer
-        &:focus
-          cursor: pointer
+        height: 4px
+        position: relative
+        background-color: lighten(black, 20%)
+        display: flex
+        .track-flow
+          background-color: $secondary
+          height: 100%
+          position: relative
+          display: flex
+          align-items: center
+          &::after // pointer
+            content: ""
+            width: 8px
+            height: 8px
+            border-radius: 2px
+            background-color: #fff
+            border: 1px solid #eee
+            cursor: pointer
+            position: absolute
+            display: block
+            right: -2px
+        .transition-flow
+          transition: width .25s
     .progress
       width: 50%
-    .volume
-      width: 120px
-      // background: none
-      &::before, &::after
-        content: none
+      &:hover .track-flow
+        background-color: #fafafa
+    .volume-container
+      display: flex
+      align-items: center
+      position: relative
+      .volume
+        width: 120px
+        display: flex
+        &:hover .track-flow
+          background-color: #fafafa
       svg
+        cursor: pointer
         position: absolute
-        left: -25px
+        left: -35px
         width: 20px
         height: 20px
         fill: white
-        margin-right: 8px
+        &.layer-0
+          .layer-1, .layer-2, .layer-3
+            display: none
+        &.layer-1
+          .layer-2, .layer-3
+            display: none
+        &.layer-2
+          .layer-3
+            display: none
     .shuffle
       cursor: pointer
       opacity: .5

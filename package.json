@@ -17,6 +17,7 @@
     "core-js": "^3.6.5",
     "custom-electron-titlebar": "^3.2.6",
     "dexie": "^3.0.3",
+    "velocity-animate": "^1.5.2",
     "vue": "^2.6.11",
     "vue-router": "^3.2.0",
     "vue-svg-loader": "^0.16.0",

@@ -1,5 +1,6 @@
 <template>
-  <div class="home">
+  <div class="settings">
+    settings
     <router-view />
   </div>
 </template>
@@ -7,7 +8,3 @@
 <script>
 export default {}
 </script>
-
-<style lang="sass" scoped>
-.home
-</style>

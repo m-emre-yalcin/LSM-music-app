@@ -2,6 +2,7 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 
 import Home from '../views/Home.vue'
+import Settings from '../views/Settings.vue'
 
 Vue.use(VueRouter)
 
@@ -23,6 +24,10 @@ const router = new VueRouter({
           component: () => import('../views/List.vue')
         }
       ]
+    }, {
+      path: '/settings',
+      name: 'settings',
+      component: Settings
     }
   ]
 })

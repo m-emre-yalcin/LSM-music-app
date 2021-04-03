@@ -1,6 +1,6 @@
 <template>
   <div class="music-list-container">
-    <div class="music-list-header">
+    <div class="music-list-header row justify-between">
       <div
         class="btn menu"
         :class="{ active: leftMenu }"
@@ -8,21 +8,43 @@
       >
         <Menu />
       </div>
+
+      <input type="search" v-model="searchText" placeholder="Search your library">
     </div>
 
-    <div :class="{ 'music-left-menu': true, active: leftMenu }"></div>
+    <div :class="{ 'music-left-menu': true, active: leftMenu }">
+      <div class="top-group">
+        <div class="item" name="Stats">
+          <Stats/>
+        </div>
+      </div>
 
-    <div class="music-list">
+      <div class="bottom-group">
+        <router-link class="item" name="Settings" to="/settings">
+          <Settings/>
+        </router-link>
+      </div>
+    </div>
+
+    <transition-group
+      tag="div"
+      class="music-list"
+      name="staggered-fade"
+      :css="false"
+      @before-enter="beforeEnter"
+      @enter="enter"
+      @leave="leave"
+    >
       <div
-        :class="{ item: true, active: i == currentMusicIndex }"
-        v-for="(music, i) in musicFiles"
-        :key="i"
-        @click="currentMusicIndex = i"
+        :class="{ item: true, active: music.id == musicFiles[currentMusicIndex].id }"
+        v-for="(music, i) in searchText ? musicFiles.filter(music=>music.name.toLowerCase().includes(searchText.toLowerCase())) : musicFiles"
+        :key="music.id"
+        @click="currentMusicIndex = musicFiles.findIndex((msc)=>msc.id == music.id)"
       >
         <div class="column">{{ i + 1 }}</div>
         <div class="column">{{ music.name }}</div>
       </div>
-    </div>
+    </transition-group>
 
     <Music-Player
       v-if="musicFiles.length"
@@ -36,9 +58,12 @@
 <script>
 import { readdir } from 'fs'
 import { join } from 'path'
+import Velocity from 'velocity-animate'
 
 import MusicPlayer from '../components/music-player'
 import Menu from '../assets/icons/menu.svg'
+import Stats from '../assets/icons/stats.svg'
+import Settings from '../assets/icons/settings.svg'
 
 const UIAudio = new Audio()
 
@@ -46,14 +71,17 @@ export default {
   name: 'MusicList',
   components: {
     MusicPlayer,
-    Menu
+    Menu,
+    Stats,
+    Settings
   },
   data () {
     return {
       musicDir: 'D:/Music/',
       musicFiles: [],
       currentMusicIndex: 0,
-      leftMenu: false
+      leftMenu: false,
+      searchText: null
     }
   },
   async mounted () {
@@ -94,6 +122,22 @@ export default {
       if (this.leftMenu) {
         UIAudio.play()
       }
+    },
+    beforeEnter (el) {
+      el.style.opacity = 0
+      el.style.height = 0
+    },
+    enter (el, done) {
+      const delay = el.dataset.index * 150
+      setTimeout(function () {
+        Velocity(el, { opacity: 1, height: '30px' }, { complete: done })
+      }, delay)
+    },
+    leave (el, done) {
+      const delay = el.dataset.index * 150
+      setTimeout(function () {
+        Velocity(el, { opacity: 0, height: 0 }, { complete: done })
+      }, delay)
     }
   }
 }
@@ -101,7 +145,7 @@ export default {
 
 <style lang="sass" scoped>
 $music-list-header-height: 50px
-$music-player-height: 123px
+$music-player-height: 138px
 
 .music-list-container
   float: left
@@ -128,31 +172,77 @@ $music-player-height: 123px
     .btn
       &.menu
         width: 50px
-        height: 25px
+        height: 20px
         opacity: .8
         cursor: pointer
         transition: opacity .2s
         &.active, &:hover
           opacity: 1
         svg
-          width: 25px
-          height: 25px
+          width: 20px
+          height: 20px
           fill: white
   .music-left-menu
     position: fixed
     left: -50px
-    transition: left .2s cubic-bezier(0.72, 0.11, 0.58, 0.39)
+    bottom: $music-player-height
+    transition: left .2s $cubic-bezier-1
     z-index: 2
     top: $music-list-header-height + 30px
-    bottom: $music-player-height
     width: 50px
     background-color: rgba(0,0,0,.6)
     -webkit-backdrop-filter: blur(8px)
     backdrop-filter: blur(8px)
     box-shadow: 4px 0 20px #000
     border-right: 1px solid #333
+    display: flex
+    flex-direction: column
+    justify-content: space-between
     &.active
       left: 0
+    .item
+      cursor: pointer
+      svg
+        width: 20px
+        height: 20px
+        fill: white
+    .item.active
+      svg
+        fill: $secondary
+    [class*=group]
+      display: flex
+      flex-direction: column
+      .item
+        position: relative
+        margin: 0 auto
+        padding: 15px 5px
+        opacity: .8
+        display: flex
+        align-items: center
+        &:hover
+          opacity: 1
+        &.active svg
+          fill: $secondary
+        &::after
+          display: block
+          content: attr(name)
+          color: #fff
+          background-color: lighten(black, 40%)
+          border-radius: 4px
+          padding: 4px 8px
+          font-size: 12px
+          opacity: 0
+          pointer-events: none
+          box-shadow: 0 0 12px #000
+          transition: opacity .1s $cubic-bezier-1
+          position: absolute
+          left: 45px
+          min-width: 30px
+        &:hover::after
+          pointer-events: visibleFill
+          opacity: 1
+        &:hover::after:hover
+          opacity: 0
   .music-list
     -webkit-overflow-scrolling: touch
     display: flex
@@ -166,13 +256,12 @@ $music-player-height: 123px
     right: -30px
     padding-top: $music-list-header-height
     padding-bottom: $music-player-height
-    transition: padding .2s cubic-bezier(0.72, 0.11, 0.58, 0.39)
+    transition: padding .2s $cubic-bezier-1
     .item
-      padding: 8px 4px
-      text-align: left
+      padding: 8px
       display: flex
       align-items: center
-      height: 40px
+      text-align: left
       border-bottom: 1px solid rgba(255,255,255,.1)
       color: #fff
       font-size: 12px
@@ -188,7 +277,7 @@ $music-player-height: 123px
         padding: 4px
         // white-space: nowrap
     .item.active
-      background-color: #D7276F
+      background-color: $secondary
       color: #fff
   .music-left-menu.active + .music-list
     padding-left: 50px

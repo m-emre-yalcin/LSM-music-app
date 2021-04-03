@@ -4,10 +4,6 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 
-// style
-import './assets/style/variables.scss'
-import './assets/style/main.sass'
-
 // db structure
 const db = new Dexie('LSM')
 db.version(1).stores({ musicFiles: '++id,path' })
