@@ -1,11 +1,18 @@
 <template>
-  <div class="player-container music-player" v-if="musicFiles.length">
+  <div
+    class="player-container music-player main-glass"
+    v-if="$store.state.musicFiles.length"
+  >
     <div class="row justify-between controls">
       <span class="btn prev" @click="prev()">
         <Previous width="20" class="light" />
       </span>
       <span class="btn pause/play" @click="play()">
-        <Pause width="20" class="light" v-if="state === 'playing'" />
+        <Pause
+          width="20"
+          class="light"
+          v-if="$store.state.musicState === 'playing'"
+        />
         <Play width="20" class="light" v-else />
       </span>
       <span class="btn next" @click="next()">
@@ -19,7 +26,9 @@
       @mouseleave="enterMusicTrack = false"
       @mouseup="enterMusicTrack = false"
     >
-      <div class="title">{{ musicFiles[currentMusicIndex].name }}</div>
+      <div class="title">
+        {{ $store.state.musicFiles[$store.state.currentMusicIndex].name }}
+      </div>
       <div
         class="progress"
         ref="progress"
@@ -88,7 +97,6 @@ import Play from '../assets/icons/play.svg'
 import Volume from '../assets/icons/volume.svg'
 import Shuffle from '../assets/icons/shuffle.svg'
 
-const Music = new Audio()
 export default {
   components: {
     Next,
@@ -98,19 +106,11 @@ export default {
     Volume,
     Shuffle
   },
-  props: {
-    musicFiles: Array,
-    currentMusicIndex: {
-      type: Number,
-      default: 0
-    }
-  },
   data () {
     return {
-      state: 'pause',
       currentTime: 0,
       duration: 0,
-      currentVolume: 1,
+      currentVolume: Number(localStorage.getItem('music-volume')) || 1,
       interval: null,
       shuffle: false,
       enterMusicTrack: false,
@@ -138,117 +138,99 @@ export default {
   },
   methods: {
     play () {
-      if (this.state === 'pause') {
-        this.state = 'playing'
-        Music.play()
-        this.interval = setInterval(() => {
-          this.currentTime = Music.currentTime
-          this.duration = Music.duration
-        }, 1000)
-      } else if (this.state === 'playing') {
-        this.state = 'pause'
-        Music.pause()
-        clearInterval(this.interval)
+      if (this.$store.state.musicState === 'pause') {
+        this.$store.commit('change-music-state', 'playing')
+      } else if (this.$store.state.musicState === 'playing') {
+        this.$store.commit('change-music-state', 'pause')
       }
     },
     prev () {
-      const index = this.currentMusicIndex - 1
+      const index = this.$store.state.currentMusicIndex - 1
       if (index >= 0) {
-        this.$emit('change-music-index', index)
+        this.$store.commit('change-music-index', index)
       }
     },
     next () {
       let index
 
       if (this.shuffle) {
-        index = Math.floor(Math.random() * this.musicFiles.length)
-        this.$emit('change-music-index', index)
+        index = Math.floor(Math.random() * this.$store.state.musicFiles.length)
+        this.$store.commit('change-music-index', index)
       } else {
-        index = this.currentMusicIndex + 1
-        if (index < this.musicFiles.length) {
-          this.$emit('change-music-index', index)
+        index = this.$store.state.currentMusicIndex + 1
+        if (index < this.$store.state.musicFiles.length) {
+          this.$store.commit('change-music-index', index)
         }
       }
     },
     changeDuration (e, progressDOM) {
       const currentTime =
-        Music.duration * (e.layerX / progressDOM.clientWidth) + 3
+        this.$store.state.Music.duration *
+          (e.layerX / progressDOM.clientWidth) +
+        3
 
       if (currentTime < 0) {
         // duration below 0
-        Music.currentTime = 0
+        this.$store.state.Music.currentTime = 0
         this.currentTime = 0
-      } else if (Music.duration < currentTime) {
+      } else if (this.$store.state.Music.duration < currentTime) {
         // limit exceed duration
-        Music.currentTime = this.duration
+        this.$store.state.Music.currentTime = this.duration
         this.currentTime = this.duration
       } else {
-        Music.currentTime = currentTime
+        this.$store.state.Music.currentTime = currentTime
         this.currentTime = currentTime
       }
     },
     changeVolume (e, volumeDOM, auto) {
       if (auto) {
-        if (Music.volume < 0.33) {
-          Music.volume = 1
+        if (this.$store.state.Music.volume < 0.2) {
+          this.$store.state.Music.volume = 1
         } else {
-          if (this.currentVolume - 0.33 > 0) {
-            Music.volume = Music.volume - 0.33
+          if (this.currentVolume - 0.2 > 0) {
+            this.$store.state.Music.volume =
+              this.$store.state.Music.volume - 0.2
           } else {
-            Music.volume = 0
+            this.$store.state.Music.volume = 0
           }
         }
 
-        this.currentVolume = Math.round(Music.volume * 10) / 10
+        this.currentVolume =
+          Math.round(this.$store.state.Music.volume * 10) / 10
       } else {
         let currentVolume = Number((e.layerX + 3) / volumeDOM.clientWidth)
         if (currentVolume > 1) currentVolume = 1
         else if (currentVolume < 0) currentVolume = 0
 
-        Music.volume = currentVolume
+        this.$store.state.Music.volume = currentVolume
         this.currentVolume = currentVolume
-      }
-    },
-    audioController (newIndex, oldIndex) {
-      Music.src = this.musicFiles[newIndex].path
-      if (newIndex !== oldIndex || typeof oldIndex === 'undefined') {
-        if (this.state === 'playing') {
-          Music.play()
-        } else Music.pause()
       }
     },
     shuffleAll () {
       this.shuffle = true
     }
   },
-  watch: {
-    currentMusicIndex (newIndex, oldIndex) {
-      this.audioController(newIndex, oldIndex)
-    }
-  },
   mounted () {
-    if (this.musicFiles.length) {
-      this.audioController(this.currentMusicIndex)
+    this.$store.commit('load-first-music')
 
-      Music.addEventListener('loadeddata', () => {
-        this.duration = Music.duration
-        this.currentTime = Music.currentTime
-      })
-      // Music.addEventListener('play', () => {
-      //   this.state = 'playing'
-      // })
-      // Music.addEventListener('playing', () => {
-      //   this.state = 'playing'
-      // })
-      // Music.addEventListener('pause', () => {
-      //   this.state = 'pause'
-      // })
-      Music.addEventListener('ended', () => {
-        setTimeout(() => {
-          this.next()
-        }, 3000)
-      })
-    }
+    this.$store.state.Music.addEventListener('loadeddata', () => {
+      this.duration = this.$store.state.Music.duration
+      this.currentTime = this.$store.state.Music.currentTime
+    })
+    this.$store.state.Music.addEventListener('timeupdate', () => {
+      this.currentTime = this.$store.state.Music.currentTime
+      this.duration = this.$store.state.Music.duration
+
+      localStorage.setItem('music-time', this.currentTime)
+    })
+    this.$store.state.Music.addEventListener('volumechange', () => {
+      localStorage.setItem('music-volume', this.$store.state.Music.volume)
+    })
+    this.$store.state.Music.addEventListener('ended', () => {
+      setTimeout(() => {
+        this.next()
+      }, 3000)
+    })
   }
 }
 </script>
@@ -266,9 +248,6 @@ export default {
   display: flex
   justify-content: space-around
   flex-direction: column
-  background-color: rgba(0,0,0,.6)
-  -webkit-backdrop-filter: blur(8px)
-  backdrop-filter: blur(8px)
   box-shadow: 0 -4px 20px #000
   border-top: 1px solid #333
   .controls
@@ -278,11 +257,9 @@ export default {
       cursor: pointer
       opacity: .7
       transition: opacity .15s
-      &:hover
-        opacity: 1
-        box-shadow: 0 0 5px #000
-      &:focus
-        box-shadow: 0 0 5px #666
+      svg
+        fill: white
+      &:hover, &:focus
         opacity: 1
   .player
     margin: 4px 0
@@ -290,8 +267,9 @@ export default {
       padding: 2px
       white-space: nowrap
       overflow-x: auto
-      width: 90%
-      color: var(--color-white-100)
+      width: 100%
+      color: #fff
+      text-align: center
     .progress, .volume
       display: flex
       align-items: center
@@ -316,7 +294,8 @@ export default {
         background-color: lighten(black, 20%)
         display: flex
         .track-flow
-          background-color: $secondary
+          // background-color: $secondary
+          background-image: radial-gradient( circle 426px at 77.9% 31.3%, rgba(255,229,131,1) 0%, rgba(249,119,0,1) 90% )
           height: 100%
           position: relative
           display: flex
