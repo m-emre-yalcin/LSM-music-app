@@ -1,67 +1,77 @@
 <template>
-  <transition-group
-    tag="div"
-    class="music-list"
-    name="staggered-fade"
-    :css="false"
-    @before-enter="beforeEnter"
-    @enter="enter"
-    @leave="leave"
-    v-if="$store.state.musicFiles.length"
-  >
-    <div
-      :class="{
-        item: true,
-        active:
-          music.id ==
-          $store.state.musicFiles[$store.state.currentMusicIndex].id,
-      }"
-      v-for="(music, i) in $store.state.searchText
-        ? $store.state.musicFiles.filter((music) =>
-            music.name
-              .toLowerCase()
-              .includes($store.state.searchText.toLowerCase())
-          )
-        : $store.state.musicFiles"
-      :key="music.id"
-      @click="
-        () => {
-          if (
-            music.id ==
-            $store.state.musicFiles[$store.state.currentMusicIndex].id
-          ) {
-            $store.commit('change-music-state');
-          } else {
-            $store.commit(
-              'change-music-index',
-              $store.state.musicFiles.findIndex((msc) => msc.id == music.id)
-            );
-          }
-        }
-      "
-      @dblclick="
-        () => {
-          if (
-            music.id !=
-            $store.state.musicFiles[$store.state.currentMusicIndex].id
-          ) {
-            $store.commit('change-music-state');
-          }
-        }
-      "
+  <div class="group">
+    <h1>
+      <Disc :class="{ spin: $store.state.musicState === 'playing' }" />
+      <span>Your Library</span>
+    </h1>
+    <transition-group
+      tag="div"
+      class="music-list"
+      name="staggered-fade"
+      :css="false"
+      @before-enter="beforeEnter"
+      @enter="enter"
+      @leave="leave"
+      v-if="$store.state.musicFiles.length"
     >
-      <div class="column">{{ i + 1 }}</div>
-      <div class="column">{{ music.id }}</div>
-      <div class="column">{{ music.name }}</div>
-    </div>
-  </transition-group>
+      <div
+        :class="{
+          item: true,
+          active:
+            music.id ==
+            $store.state.musicFiles[$store.state.currentMusicIndex].id,
+        }"
+        v-for="(music, i) in $store.state.searchText
+          ? $store.state.musicFiles.filter((music) =>
+              music.name
+                .toLowerCase()
+                .includes($store.state.searchText.toLowerCase())
+            )
+          : $store.state.musicFiles"
+        :key="music.id"
+        @click="
+          () => {
+            if (
+              music.id ==
+              $store.state.musicFiles[$store.state.currentMusicIndex].id
+            ) {
+              $store.commit('change-music-state');
+            } else {
+              $store.commit(
+                'change-music-index',
+                $store.state.musicFiles.findIndex((msc) => msc.id == music.id)
+              );
+            }
+          }
+        "
+        @dblclick="
+          () => {
+            if (
+              music.id !=
+              $store.state.musicFiles[$store.state.currentMusicIndex].id
+            ) {
+              $store.commit('change-music-state');
+            }
+          }
+        "
+      >
+        <div class="column">{{ i + 1 }}</div>
+        <div class="column">{{ music.id }}</div>
+        <div class="column">{{ music.name }}</div>
+      </div>
+    </transition-group>
 
-  <div v-else class="music-list">There is no music in your list.</div>
+    <div v-else class="group music-list">There is no music in your list. Go to the <router-link to="/settings">Settings</router-link> for import some...</div>
+  </div>
 </template>
 
 <script>
 import Velocity from 'velocity-animate'
+import Disc from '../assets/icons/music-disc.svg'
 export default {
+  components: {
+    Disc
+  },
   methods: {
     beforeEnter (el) {
       el.style.opacity = 0

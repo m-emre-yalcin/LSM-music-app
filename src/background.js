@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, globalShortcut, ipcMain } from 'electron'
+import { app, protocol, BrowserWindow, globalShortcut, ipcMain, dialog } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import { join } from 'path'
@@ -50,6 +50,14 @@ async function createWindow () {
   })
   globalShortcut.register('MediaPreviousTrack', () => {
     win.webContents.send('MediaPlayer', { action: 'prevTrack' })
+  })
+
+  ipcMain.on('select-directory', (event, arg) => {
+    dialog.showOpenDialog({
+      properties: ['openDirectory']
+    }).then(res => {
+      win.webContents.send('get-directory', res.filePaths[0])
+    })
   })
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {

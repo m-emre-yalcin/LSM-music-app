@@ -245,6 +245,17 @@ export default {
       localStorage.setItem('music-volume', this.$store.state.Music.volume)
     })
     this.$store.state.Music.addEventListener('ended', () => {
+      let { id, listenCount } = this.$store.state.musicFiles[
+        this.$store.state.currentMusicIndex
+      ]
+      listenCount = listenCount + 1 || 1
+
+      this.$db.musicFiles.update(id, { listenCount }).then(updated => {
+        if (updated) {
+          this.$store.state.musicFiles[this.$store.state.currentMusicIndex].listenCount = listenCount
+        }
+      })
+
       setTimeout(() => {
         this.next()
       }, 3000)
@@ -282,7 +293,6 @@ export default {
   overflow: hidden
   padding: 16px 4px 8px 4px
   z-index: 1
-  background-color: var(--color-black-100)
   display: flex
   justify-content: space-around
   flex-direction: column

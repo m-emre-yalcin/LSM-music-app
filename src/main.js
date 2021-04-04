@@ -6,7 +6,7 @@ import store from './store'
 
 // db structure
 const db = new Dexie('LSM')
-db.version(1).stores({ musicFiles: '++id,path' })
+db.version(3.2).stores({ musicFiles: '++id,path,dir,name,listenCount', musicDirectories: '++id,path,active' })
 
 Vue.config.productionTip = false
 Vue.prototype.$db = db

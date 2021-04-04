@@ -29,6 +29,10 @@ const router = new VueRouter({
         {
           path: 'settings',
           component: () => import('../views/Settings.vue')
+        },
+        {
+          path: 'youtube-mp3',
+          component: () => import('../views/YoutubeMp3.vue')
         }
       ]
     }

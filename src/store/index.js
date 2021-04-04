@@ -5,7 +5,7 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    musicDir: 'D:/Music/',
+    musicDirectories: [],
     musicFiles: [],
     Music: new Audio(),
     musicState: 'pause',
@@ -14,13 +14,18 @@ export default new Vuex.Store({
     searchText: null
   },
   mutations: {
+    'load-musics' (state, files) {
+      state.musicFiles.push(...files)
+    },
     'change-music-index' (state, index) {
-      state.currentMusicIndex = index
-      state.Music.src = state.musicFiles[state.currentMusicIndex].path
+      if (index >= 0 && index < state.musicFiles.length) {
+        state.currentMusicIndex = index
+        state.Music.src = state.musicFiles[state.currentMusicIndex].path
 
-      localStorage.setItem('music-index', index)
+        localStorage.setItem('music-index', index)
 
-      if (state.musicState === 'playing') state.Music.play()
+        if (state.musicState === 'playing') state.Music.play()
+      }
     },
     'change-music-state' (state, newState) {
       if (typeof newState === 'undefined') {
@@ -46,9 +51,14 @@ export default new Vuex.Store({
       state.musicState = newState
     },
     'load-first-music' (state) {
-      const musicIndexFromPrevSession = Number(localStorage.getItem('music-index')) || 0
+      let musicIndexFromPrevSession = Number(localStorage.getItem('music-index')) || 0
       const musicTimeFromPrevSession = Number(localStorage.getItem('music-time')) || 0
       const musicVolumeFromPrevSession = Number(localStorage.getItem('music-volume')) || 1
+      if (typeof state.musicFiles[musicIndexFromPrevSession] === 'undefined') {
+        musicIndexFromPrevSession = 0
+        localStorage.setItem('music-index', 0)
+      }
+
       state.currentMusicIndex = musicIndexFromPrevSession
       state.Music.src = state.musicFiles[musicIndexFromPrevSession].path
       state.Music.currentTime = musicTimeFromPrevSession

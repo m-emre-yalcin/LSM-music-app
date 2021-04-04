@@ -12,7 +12,7 @@
       <input
         type="search"
         v-model="$store.state.searchText"
-        placeholder="Search your library"
+        placeholder="Search library"
       />
     </div>
 
@@ -20,6 +20,7 @@
       :class="{
         'music-left-menu': true,
         'main-glass': true,
+        'full-height': !$store.state.musicFiles.length,
         active: $store.state.leftMenu,
       }"
     >
@@ -29,6 +30,9 @@
         </router-link>
         <router-link class="item" name="Stats" to="/stats">
           <Stats />
+        </router-link>
+        <router-link class="item" name="Expand your music library" to="/youtube-mp3">
+          <VideoPlayer />
         </router-link>
       </div>
 
@@ -47,17 +51,15 @@
 </template>
 
 <script>
-import { readdir } from 'fs'
-import { join } from 'path'
-
 import MusicPlayer from '../components/music-player'
 import Menu from '../assets/icons/menu.svg'
 import Disc from '../assets/icons/music-disc.svg'
 import Stats from '../assets/icons/stats.svg'
 import Settings from '../assets/icons/settings.svg'
+import VideoPlayer from '../assets/icons/video-player.svg'
 
 const UIAudio = new Audio()
-UIAudio.volume = 0.4
+UIAudio.volume = 0.25
 
 export default {
   name: 'MusicList',
@@ -66,35 +68,22 @@ export default {
     Menu,
     Disc,
     Stats,
-    Settings
+    Settings,
+    VideoPlayer
   },
   async mounted () {
-    // get music files
-    this.$store.state.musicFiles = await this.$db.musicFiles.toArray()
+    // get music directories
+    this.$store.state.musicDirectories = await this.$db.musicDirectories.toArray()
 
-    if (this.$store.state.musicFiles.length === 0) {
-      readdir(join(this.$store.state.musicDir), (err, files) => {
-        if (err) throw err
+    if (this.$store.state.musicDirectories.length === 0) {
+      // go to settings
+      if (this.$route.path !== '/settings') {
+        this.$router.push({ path: 'settings' })
+      }
 
-        // filter mp3 files
-        files = files
-          .filter((file) => {
-            const ext = file.substr(-3, 3)
-            if (ext.includes('mp3')) {
-              return true
-            }
-          })
-          .map((file) => {
-            return { path: this.$store.state.musicDir + file, name: file }
-          })
-
-        // save music paths
-        this.$db.transaction('rw', this.$db.musicFiles, async () => {
-          await this.$db.musicFiles.bulkAdd(files)
-        })
-
-        this.$store.state.musicFiles = files
-      })
+      alert('You should select a library path before using the player.')
+    } else {
+      this.$store.commit('load-musics', await this.$db.musicFiles.toArray())
     }
   },
   methods: {
@@ -111,7 +100,7 @@ export default {
 }
 </script>
 
-<style lang="sass" scoped>
+<style lang="sass">
 .music-list-container
   overflow: hidden
   background-color: black
@@ -158,7 +147,7 @@ export default {
   .music-left-menu
     position: fixed
     left: -50px
-    bottom: $music-player-height - 1
+    bottom: $music-player-height - 1px
     top: $music-list-header-height + 30px
     z-index: 2
     transition: left .2s $cubic-bezier-1
@@ -167,6 +156,8 @@ export default {
     display: flex
     flex-direction: column
     justify-content: space-between
+    &.full-height
+      bottom: 0
     &::before
       content: ""
       height: 95%
@@ -230,24 +221,4 @@ export default {
           opacity: 0
   .music-left-menu.active + .main-container
     padding-left: 50px
-
-  .main-container
-    -webkit-overflow-scrolling: touch
-    display: flex
-    flex-direction: column
-    overflow-y: overlay
-    overflow-x: hidden
-    position: fixed
-    top: 30px
-    bottom: 0
-    left: 0
-    right: 0
-    padding-top: $music-list-header-height
-    padding-bottom: $music-player-height
-    transition: padding .2s $cubic-bezier-1
-
-  .main-glass
-    background-color: rgba(255,255,255,.6)
-    background-image: radial-gradient( circle 1192px at 21.5% 49.5%,  rgba(91,21,55,.8) 0.1%, rgba(0,0,0,.1) 100.2% )
-    backdrop-filter: blur(8px)
 </style>

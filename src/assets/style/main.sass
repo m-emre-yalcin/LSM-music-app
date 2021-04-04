@@ -63,3 +63,51 @@ svg.light
     transform: rotate(0deg)
   100%
     transform: rotate(360deg)
+
+
+// main components
+.main-container // effects all router-views inside home
+  -webkit-overflow-scrolling: touch
+  display: flex
+  flex-direction: column
+  overflow-y: overlay
+  overflow-x: hidden
+  position: fixed
+  top: 30px
+  bottom: 0
+  left: 0
+  right: 0
+  padding-top: $music-list-header-height
+  padding-bottom: $music-player-height
+  transition: padding .2s $cubic-bezier-1
+  color: #fff
+  h1
+    padding: .5rem 1rem
+    span
+      margin-left: 1rem
+    svg
+      width: 25px
+      height: 25px
+  h2
+    span
+      margin-left: 8px
+    svg
+      width: 20px
+      height: 20px
+  h1, h2
+    margin: 4px 0
+    display: flex
+    align-items: center
+    svg
+      fill: #fff
+  .group
+    padding: 1rem
+    display: flex
+    flex: 1
+    flex-direction: column
+    backgroun-color: lighten(black, 10%)
+
+.main-glass
+  background-color: rgba(255,255,255,.6)
+  background-image: radial-gradient( circle 1192px at 21.5% 49.5%,  rgba(91,21,55,.8) 0.1%, rgba(0,0,0,.1) 100.2% )
+  backdrop-filter: blur(8px)
