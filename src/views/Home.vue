@@ -31,7 +31,11 @@
         <router-link class="item" name="Stats" to="/stats">
           <Stats />
         </router-link>
-        <router-link class="item" name="Expand your music library" to="/youtube-mp3">
+        <router-link
+          class="item"
+          name="Expand your music library"
+          to="/youtube-mp3"
+        >
           <VideoPlayer />
         </router-link>
       </div>
@@ -81,10 +85,17 @@ export default {
         this.$router.push({ path: 'settings' })
       }
 
-      alert('You should select a library path before using the player.')
+      alert('You should select a library path be able to use the player.')
     } else {
-      this.$store.commit('load-musics', await this.$db.musicFiles.toArray())
+      this.$store.commit('load-active-directories')
     }
+
+    // set theme
+    setTimeout(() => {
+      document.querySelectorAll('.main-glass').forEach((dom) => {
+        dom.style = this.$store.state.themes[Number(localStorage.getItem('theme'))]
+      })
+    }, 100)
   },
   methods: {
     openLeftMenu () {
