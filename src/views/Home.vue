@@ -8,7 +8,10 @@
       >
         <Menu />
       </div>
-
+      <h1 v-if="$route.meta && $route.meta.headerTitle">
+        <!-- <component :is="$route.meta.headerIcon"/> -->
+        <span>{{ $route.meta.headerTitle }}</span>
+      </h1>
       <input
         type="search"
         v-model="$store.state.searchText"
@@ -85,7 +88,7 @@ export default {
         this.$router.push({ path: 'settings' })
       }
 
-      alert('You should select a library path be able to use the player.')
+      // alert('You should select a library path be able to use the player.')
     } else {
       this.$store.commit('load-active-directories')
     }
@@ -93,7 +96,9 @@ export default {
     // set theme
     setTimeout(() => {
       document.querySelectorAll('.main-glass').forEach((dom) => {
-        dom.style = this.$store.state.themes[Number(localStorage.getItem('theme'))]
+        dom.style = this.$store.state.themes[
+          Number(localStorage.getItem('theme'))
+        ]
       })
     }, 100)
   },
@@ -130,6 +135,18 @@ export default {
     color: #fff
     box-shadow: 0 4px 20px #000
     border-bottom: 1px solid #333
+    h1
+      flex: 1
+      padding: 0 0 0 8px
+      margin: 0
+      display: flex
+      align-items: center
+      // span
+      //   margin-left: 1rem
+      // svg
+      //   width: 25px
+      //   height: 25px
+      //   fill: #fff
     [type=search]
       padding: 4px
       margin: 5px 8px

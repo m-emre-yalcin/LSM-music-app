@@ -9,6 +9,7 @@ $yellow: rgba(255,229,131,1)
 $cubic-bezier-1: cubic-bezier(0.72, 0.11, 0.58, 0.39)
 
 $music-list-header-height: 50px
+$music-list-table-header-height: 20px
 $music-player-height: 138px
 
 *
@@ -77,28 +78,19 @@ svg.light
   bottom: 0
   left: 0
   right: 0
-  padding-top: $music-list-header-height
+  padding-top: $music-list-header-height + $music-list-table-header-height
   padding-bottom: $music-player-height
   transition: padding .2s $cubic-bezier-1
   color: #fff
-  h1
-    padding: .5rem 1rem
-    span
-      margin-left: 1rem
-    svg
-      width: 25px
-      height: 25px
   h2
+    margin: 4px 0
+    display: flex
+    align-items: center
     span
       margin-left: 8px
     svg
       width: 20px
       height: 20px
-  h1, h2
-    margin: 4px 0
-    display: flex
-    align-items: center
-    svg
       fill: #fff
   .group
     padding: 1rem

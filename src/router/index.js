@@ -20,19 +20,35 @@ const router = new VueRouter({
       children: [
         {
           path: 'list',
-          component: () => import('../views/List.vue')
+          component: () => import('../views/List.vue'),
+          meta: {
+            headerTitle: 'Your Library',
+            headerIcon: 'Disc'
+          }
         },
         {
           path: 'stats',
-          component: () => import('../views/Stats.vue')
-        },
-        {
-          path: 'settings',
-          component: () => import('../views/Settings.vue')
+          component: () => import('../views/Stats.vue'),
+          meta: {
+            headerTitle: 'Your Music Habits',
+            headerIcon: 'Stats'
+          }
         },
         {
           path: 'youtube-mp3',
-          component: () => import('../views/YoutubeMp3.vue')
+          component: () => import('../views/YoutubeMp3.vue'),
+          meta: {
+            headerTitle: 'Expand Your Library',
+            headerIcon: 'VideoPlayer'
+          }
+        },
+        {
+          path: 'settings',
+          component: () => import('../views/Settings.vue'),
+          meta: {
+            headerTitle: 'Settings',
+            headerIcon: 'Settings'
+          }
         }
       ]
     }

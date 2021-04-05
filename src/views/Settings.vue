@@ -1,9 +1,5 @@
 <template>
   <div class="settings">
-    <h1>
-      <Settings />
-      <span>Settings</span>
-    </h1>
     <div class="group">
       <h2>
         <Directory />
@@ -54,22 +50,28 @@
       </h2>
 
       <div class="body">
-        <div class="theme" v-for="(theme,i) in $store.state.themes" :key="i" :style="theme" @click="changeTheme(i)"/>
+        <div
+          class="theme"
+          v-for="(theme, i) in $store.state.themes"
+          :key="i"
+          :style="theme"
+          @click="changeTheme(i)"
+        />
       </div>
     </div>
 
     <div class="group">
       <h2>
         <Storage />
-        <span>Clear Storage</span>
+        <span>Storage</span>
       </h2>
       <div class="btn clear" @click="clearStorage()">Clear</div>
+      <div class="btn clear">Export</div>
     </div>
   </div>
 </template>
 
 <script>
-import Settings from '../assets/icons/settings.svg'
 import Theme from '../assets/icons/theme.svg'
 import Directory from '../assets/icons/directory.svg'
 import Tick from '../assets/icons/tick.svg'
@@ -77,13 +79,12 @@ import Cancel from '../assets/icons/cancel.svg'
 import Storage from '../assets/icons/database.svg'
 
 // will be moved to background server
-import { readdir } from 'fs'
-import { join } from 'path'
+import { readdir, promises } from 'fs'
+import { join, extname } from 'path'
 
 import { ipcRenderer } from 'electron'
 export default {
   components: {
-    Settings,
     Directory,
     Tick,
     Theme,
@@ -95,41 +96,46 @@ export default {
       ipcRenderer.send('select-directory')
     },
     async addMusicDirAndLoadMusic (dir) {
-      console.log('directory id:', dir.id, 'addMusicDirAndLoadMusic')
+      dir.id = await this.$db.musicDirectories.add(dir) // last id
+      this.$store.state.musicDirectories.push(dir)
+
       if (
-        this.$store.state.musicDirectories.filter(
-          (Dir) => Dir.path === dir.path
-        ).length === 0
+        (await this.$db.musicDirectories
+          .where('path')
+          .equals(dir.path)
+          .count()) === 1
       ) {
         if (dir.active) {
+          const musicFiles = []
           readdir(dir.path, async (err, files) => {
             if (err) throw err
 
-            // filter mp3 files
-            files = files
-              .filter((file) => {
-                const ext = file.substr(-3, 3)
-                if (ext.includes('mp3')) {
-                  return true
-                }
-              })
+            files // file names
+              .filter((file) => extname(file) === '.mp3')
               .map((file) => {
-                return {
+                file = {
+                  // convert file names into file object
                   path: join(dir.path, file),
                   name: file,
                   dir: dir.id
                 }
+                musicFiles.push(file)
               })
-            console.log(files.length, 'dosya yükleniyor')
 
-            // save music paths
-            await this.$db.musicFiles.bulkAdd(files)
-            await this.$store.state.musicDirectories.push(dir)
+            await Promise.all(musicFiles.map(async (file, i) => {
+              musicFiles[i].fileStats = await promises.stat(file.path)
+              return file
+            }))
+
+            console.log(musicFiles.length)
+            await this.$db.musicFiles.bulkAdd(musicFiles)
             await this.$store.commit('load-active-directories')
             await this.$store.commit('load-first-music')
-            window.location.reload(true)
+            // window.location.reload(true)
           })
         }
+      } else {
+        alert('This directory already exists!')
       }
     },
     async removeDirectory (dirId) {
@@ -152,8 +158,11 @@ export default {
       this.$db.musicDirectories.update(dir.id, { active: dir.active })
       this.$store.commit('load-active-directories')
     },
-    async clearStorage () {
-      if (confirm('Are you sure you want to clear all of your data?')) {
+    async clearStorage (dontask = false) {
+      if (
+        dontask ||
+        confirm('Are you sure you want to clear all of your data?')
+      ) {
         // await this.$db.musicDirectories.clear()
         // await this.$db.musicFiles.clear()
         this.$db.delete()
@@ -174,23 +183,16 @@ export default {
     ipcRenderer.on('get-directory', async (event, arg) => {
       if (arg) {
         // arg = directory
-        var Dir = {
+        const dir = {
           path: arg,
           active: true
         }
-        if (
-          (await this.$db.musicDirectories
-            .where('path')
-            .equals(arg)
-            .count()) === 0
-        ) {
-          // check if exists
-          Dir.id = await this.$db.musicDirectories.add(Dir) // last id
-          await this.addMusicDirAndLoadMusic(Dir)
-        } else {
-          alert('This directory already exists!')
-        }
+        await this.addMusicDirAndLoadMusic(dir)
       }
+    })
+
+    ipcRenderer.on('clearstore', () => {
+      this.clearStorage(true)
     })
   }
 }
@@ -250,6 +252,7 @@ export default {
     margin: 8px
     border-radius: 4px
     box-shadow: 0 0 10px black
+    border: 1px solid rgba(255,255,255,.2)
 .btn.clear
   border-radius: 4px
   border: 1px solid #fff

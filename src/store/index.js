@@ -13,6 +13,11 @@ export default new Vuex.Store({
     leftMenu: false,
     searchText: null,
     themes: [
+      'background-color: rgba(0,0,0,.6); background-image: none;',
+      'background-color: rgba(255,0,0,.6); background-image: none;',
+      'background-color: rgba(0,255,0,.6); background-image: none;',
+      'background-color: rgba(0,0,255,.6); background-image: none;',
+      'background-color: background-color: rgba(255,255,255,.6); background-image: radial-gradient( circle 1192px at 21.5% 49.5%,  rgba(91,21,55,.8) 0.1%, rgba(0,0,0,.1) 100.2% );',
       'background-color: #4158D0;background-image: linear-gradient(43deg, #4158D0 0%, #C850C0 46%, #FFCC70 100%);',
       'background-color: #0093E9;background-image: linear-gradient(160deg, #0093E9 0%, #80D0C7 100%);',
       'background-color: #0093E9;background-image: linear-gradient(160deg, #0093E9 0%, #80D0C7 100%);',
@@ -27,7 +32,6 @@ export default new Vuex.Store({
       'background-image: linear-gradient( 293.5deg,  rgba(181,149,208,1) 3.2%, rgba(251,148,207,1) 9.9%, rgba(181,149,208,1) 22.9%, rgba(251,148,207,1) 36.4%, rgba(181,149,208,1) 50.1%, rgba(251,148,207,1) 61.1%, rgba(181,149,208,1) 71.2%, rgba(251,148,207,1) 84.2%, rgba(181,149,208,1) 92.2% );',
       'background-image: linear-gradient( 76.3deg,  rgba(44,62,78,1) 12.6%, rgba(69,103,131,1) 82.8% );',
       'background-image: linear-gradient( 94.3deg,  rgba(26,33,64,1) 10.9%, rgba(81,84,115,1) 87.1% );',
-      'background-image: linear-gradient( 110.3deg,  rgba(73,93,109,1) 4.3%, rgba(49,55,82,1) 96.7% );',
       'background-image: linear-gradient( 110.3deg,  rgba(73,93,109,1) 4.3%, rgba(49,55,82,1) 96.7% );',
       'background-image: linear-gradient( 76.9deg,  rgba(255,90,90,1) 27.2%, rgba(130,5,255,1) 79.9% );',
       'background-image: linear-gradient( 111.6deg,  rgba(174,68,223,1) 27.3%, rgba(246,135,135,1) 112.7% );',
@@ -99,7 +103,7 @@ export default new Vuex.Store({
         .anyOf(activeDirs)
         .toArray()
     },
-    'next-state' (state) {}
+    'next-state' (state) { }
   },
   actions: {
   },

@@ -15,14 +15,14 @@ protocol.registerSchemesAsPrivileged([
 async function createWindow () {
   // Create the browser window.
   const win = new BrowserWindow({
-    width: 400,
+    width: 500,
     height: 600,
-    minWidth: 300,
+    minWidth: 350,
     minHeight: 300,
     center: true,
     titleBarStyle: 'hidden',
     frame: false,
-    icon: join(__dirname, 'lysosome-icon.png'),
+    icon: join(__dirname, 'icons/icon.png'),
     webPreferences: {
       webSecurity: false,
       images: true,
@@ -64,6 +64,10 @@ async function createWindow () {
     // Load the url of the dev server if in development mode
     await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
     if (!process.env.IS_TEST) win.webContents.openDevTools()
+
+    globalShortcut.register('1', () => {
+      win.webContents.send('clearstore')
+    })
   } else {
     createProtocol('app')
     // Load the index.html when not in development
