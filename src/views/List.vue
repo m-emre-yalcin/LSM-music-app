@@ -2,7 +2,8 @@
   <div class="group">
     <header class="fixed main-glass">
       <div class="column-header" @click="sortBy('size')">Size</div>
-      <div class="column-header">Name</div>
+      <div class="column-header" @click="sortBy('name')">Name</div>
+      <div class="column-header" @click="sortBy('birthtime')">Created</div>
     </header>
     <transition-group
       tag="div"
@@ -59,6 +60,7 @@
           {{ Math.floor(music.fileStats.size / (1024 * 1000)) + " Mb" }}
         </div>
         <div class="column">{{ music.name }}</div>
+        <div class="column">{{ new Date(music.fileStats.birthtime).toDateString() }}</div>
       </div>
     </transition-group>
 
