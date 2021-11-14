@@ -3,17 +3,16 @@
 </template>
 
 <script>
-const customTitlebar = require('custom-electron-titlebar')
-/* eslint-disable */
+const customTitlebar = require("custom-electron-titlebar");
 export default {
-  mounted () {
+  mounted() {
     const titlebar = new customTitlebar.Titlebar({
-      backgroundColor: customTitlebar.Color.fromHex('#000'),
+      backgroundColor: customTitlebar.Color.fromHex("#000"),
       menu: false,
-      titleHorizontalAlignment: 'left',
-    })
+      titleHorizontalAlignment: "left",
+    });
 
-    titlebar.updateTitle('Lysosome Music');
-  }
-}
+    titlebar.updateTitle("Lysosome Music");
+  },
+};
 </script>

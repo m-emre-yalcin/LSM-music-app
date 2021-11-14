@@ -9,11 +9,11 @@
 </template>
 
 <script>
-import betaPlayer from '../components/beta-player'
+import betaPlayer from "../components/beta-player";
 
 export default {
   components: {
-    betaPlayer
-  }
-}
+    betaPlayer,
+  },
+};
 </script>

@@ -8,15 +8,15 @@ export default {
     }
   },
   mutations: {
-    'next-music-index' (state) {
+    'next-music-index'(state) {
       console.log()
     },
-    'prev-music-index' (state) {
+    'prev-music-index'(state) {
 
     }
   },
   actions: {
-    updateValue ({ commit }, payload) {
+    updateValue({ commit }, payload) {
       commit('updateValue', payload)
     }
   }

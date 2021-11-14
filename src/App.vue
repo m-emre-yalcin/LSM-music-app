@@ -6,10 +6,10 @@
 </template>
 
 <script>
-import Titlebar from './components/titlebar'
+import Titlebar from "./components/titlebar";
 export default {
   components: {
-    Titlebar
-  }
-}
+    Titlebar,
+  },
+};
 </script>

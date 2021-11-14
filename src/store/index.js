@@ -40,7 +40,7 @@ export default new Vuex.Store({
     ]
   },
   mutations: {
-    'change-music-index' (state, index) {
+    'change-music-index'(state, index) {
       if (index >= 0 && index < state.musicFiles.length) {
         state.currentMusicIndex = index
         state.Music.src = state.musicFiles[state.currentMusicIndex].path
@@ -50,7 +50,7 @@ export default new Vuex.Store({
         if (state.musicState === 'playing') state.Music.play()
       }
     },
-    'change-music-state' (state, newState) {
+    'change-music-state'(state, newState) {
       if (typeof newState === 'undefined') {
         if (state.musicState === 'playing') {
           newState = 'pause'
@@ -73,7 +73,7 @@ export default new Vuex.Store({
 
       state.musicState = newState
     },
-    'load-first-music' (state) {
+    'load-first-music'(state) {
       if (state.musicFiles.length) {
         let musicIndexFromPrevSession = Number(localStorage.getItem('music-index')) || 0
         let musicTimeFromPrevSession = Number(localStorage.getItem('music-time')) || 0
@@ -93,7 +93,7 @@ export default new Vuex.Store({
         console.log('there is no music to load')
       }
     },
-    async 'load-active-directories' (state) {
+    async 'load-active-directories'(state) {
       const activeDirs = state.musicDirectories
         .filter((dir) => dir.active)
         .map((dir) => dir.id)
@@ -103,7 +103,7 @@ export default new Vuex.Store({
         .anyOf(activeDirs)
         .toArray()
     },
-    'next-state' (state) { }
+    'next-state'(state) { }
   },
   actions: {
   },

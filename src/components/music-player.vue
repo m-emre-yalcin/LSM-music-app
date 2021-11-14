@@ -49,7 +49,7 @@
         </div>
       </div>
       <div class="row justify-around" style="padding-top: 6px">
-        <div :class="{ shuffle: true, active: shuffle }" @click="shuffleAll()">
+        <div class="shuffle" :class="{ active: shuffle }" @click="shuffleAll()">
           <Shuffle />
         </div>
 
@@ -90,14 +90,14 @@
 </template>
 
 <script>
-import Next from '../assets/icons/next.svg'
-import Previous from '../assets/icons/previous.svg'
-import Pause from '../assets/icons/pause.svg'
-import Play from '../assets/icons/play.svg'
-import Volume from '../assets/icons/volume.svg'
-import Shuffle from '../assets/icons/shuffle.svg'
+import Next from "../assets/icons/next.svg";
+import Previous from "../assets/icons/previous.svg";
+import Pause from "../assets/icons/pause.svg";
+import Play from "../assets/icons/play.svg";
+import Volume from "../assets/icons/volume.svg";
+import Shuffle from "../assets/icons/shuffle.svg";
 
-import { ipcRenderer } from 'electron'
+import { ipcRenderer } from "electron";
 export default {
   components: {
     Next,
@@ -105,299 +105,341 @@ export default {
     Pause,
     Play,
     Volume,
-    Shuffle
+    Shuffle,
   },
-  data () {
+  data() {
     return {
       currentTime: 0,
       duration: 0,
-      currentVolume: Number(localStorage.getItem('music-volume')) || 1,
+      currentVolume: Number(localStorage.getItem("music-volume")) || 1,
       interval: null,
       shuffle: false,
       enterMusicTrack: false,
-      enterVolumeTrack: false
-    }
+      enterVolumeTrack: false,
+    };
   },
   filters: {
-    secondsToHms (second) {
-      const d = Number(second)
-      const h = Math.floor(d / 3600)
-      const m = Math.floor((d % 3600) / 60)
-      const s = Math.floor((d % 3600) % 60)
+    secondsToHms(second) {
+      const d = Number(second);
+      const h = Math.floor(d / 3600);
+      const m = Math.floor((d % 3600) / 60);
+      const s = Math.floor((d % 3600) % 60);
       const hDisplay =
-        h > 0 ? `${h.toString().length > 1 ? `${h}` : `${0}${h}`}` : '00'
+        h > 0 ? `${h.toString().length > 1 ? `${h}` : `${0}${h}`}` : "00";
       const mDisplay =
-        m > 0 ? `${m.toString().length > 1 ? `${m}` : `${0}${m}`}` : '00'
+        m > 0 ? `${m.toString().length > 1 ? `${m}` : `${0}${m}`}` : "00";
       const sDisplay =
-        s > 0 ? `${s.toString().length > 1 ? `${s}` : `${0}${s}`}` : '00'
+        s > 0 ? `${s.toString().length > 1 ? `${s}` : `${0}${s}`}` : "00";
       if (h === 0) {
-        return `${mDisplay}:${sDisplay}`
+        return `${mDisplay}:${sDisplay}`;
       } else {
-        return `${hDisplay}:${mDisplay}:${sDisplay}`
+        return `${hDisplay}:${mDisplay}:${sDisplay}`;
       }
-    }
+    },
   },
   methods: {
-    play () {
-      if (this.$store.state.musicState === 'pause') {
-        this.$store.commit('change-music-state', 'playing')
-      } else if (this.$store.state.musicState === 'playing') {
-        this.$store.commit('change-music-state', 'pause')
+    play() {
+      if (this.$store.state.musicState === "pause") {
+        this.$store.commit("change-music-state", "playing");
+      } else if (this.$store.state.musicState === "playing") {
+        this.$store.commit("change-music-state", "pause");
       }
     },
-    prev () {
+    prev() {
       this.$store.commit(
-        'change-music-index',
+        "change-music-index",
         this.$store.state.currentMusicIndex - 1
-      )
+      );
     },
-    next () {
-      let index
+    next() {
+      let index;
 
       if (this.shuffle) {
-        index = Math.floor(Math.random() * this.$store.state.musicFiles.length)
-        this.$store.commit('change-music-index', index)
+        index = Math.floor(Math.random() * this.$store.state.musicFiles.length);
+        this.$store.commit("change-music-index", index);
       } else {
-        index = this.$store.state.currentMusicIndex + 1
+        index = this.$store.state.currentMusicIndex + 1;
         if (index < this.$store.state.musicFiles.length) {
-          this.$store.commit('change-music-index', index)
+          this.$store.commit("change-music-index", index);
         }
       }
     },
-    changeDuration (e, progressDOM) {
+    changeDuration(e, progressDOM) {
       const currentTime =
         this.$store.state.Music.duration *
           (e.layerX / progressDOM.clientWidth) +
-        3
+        3;
 
       if (currentTime < 0) {
         // duration below 0
-        this.$store.state.Music.currentTime = 0
-        this.currentTime = 0
+        this.$store.state.Music.currentTime = 0;
+        this.currentTime = 0;
       } else if (this.$store.state.Music.duration < currentTime) {
         // limit exceed duration
-        this.$store.state.Music.currentTime = this.duration
-        this.currentTime = this.duration
+        this.$store.state.Music.currentTime = this.duration;
+        this.currentTime = this.duration;
       } else {
-        this.$store.state.Music.currentTime = currentTime
-        this.currentTime = currentTime
+        this.$store.state.Music.currentTime = currentTime;
+        this.currentTime = currentTime;
       }
     },
-    changeVolume (e, volumeDOM, auto) {
+    changeVolume(e, volumeDOM, auto) {
       if (auto) {
         if (this.$store.state.Music.volume < 0.2) {
-          this.$store.state.Music.volume = 1
+          this.$store.state.Music.volume = 1;
         } else {
           if (this.currentVolume - 0.2 > 0) {
             this.$store.state.Music.volume =
-              this.$store.state.Music.volume - 0.2
+              this.$store.state.Music.volume - 0.2;
           } else {
-            this.$store.state.Music.volume = 0
+            this.$store.state.Music.volume = 0;
           }
         }
 
         this.currentVolume =
-          Math.round(this.$store.state.Music.volume * 10) / 10
+          Math.round(this.$store.state.Music.volume * 10) / 10;
       } else {
-        let currentVolume = Number((e.layerX + 3) / volumeDOM.clientWidth)
-        if (currentVolume > 1) currentVolume = 1
-        else if (currentVolume < 0) currentVolume = 0
+        let currentVolume = Number((e.layerX + 3) / volumeDOM.clientWidth);
+        if (currentVolume > 1) currentVolume = 1;
+        else if (currentVolume < 0) currentVolume = 0;
 
-        this.$store.state.Music.volume = currentVolume
-        this.currentVolume = currentVolume
+        this.$store.state.Music.volume = currentVolume;
+        this.currentVolume = currentVolume;
       }
     },
-    volume (symbol) {
-      if (symbol === '++') {
+    volume(symbol) {
+      if (symbol === "++") {
         if (this.$store.state.Music.volume < 0.9) {
-          this.$store.state.Music.volume += 0.1
+          this.$store.state.Music.volume += 0.1;
         } else {
-          this.$store.state.Music.volume = 1
+          this.$store.state.Music.volume = 1;
         }
-      } else if (symbol === '--') {
+      } else if (symbol === "--") {
         if (this.$store.state.Music.volume > 0.1) {
-          this.$store.state.Music.volume -= 0.1
+          this.$store.state.Music.volume -= 0.1;
         } else {
-          this.$store.state.Music.volume = 0
+          this.$store.state.Music.volume = 0;
         }
       }
 
-      this.currentVolume = this.$store.state.Music.volume
+      this.currentVolume = this.$store.state.Music.volume;
     },
-    shuffleAll () {
-      this.shuffle = true
-    }
+    shuffleAll() {
+      this.shuffle = !this.shuffle;
+    },
   },
-  mounted () {
-    this.$store.commit('load-first-music')
+  mounted() {
+    this.$store.commit("load-first-music");
 
-    this.$store.state.Music.addEventListener('loadeddata', () => {
-      this.duration = this.$store.state.Music.duration
-      this.currentTime = this.$store.state.Music.currentTime
-    })
-    this.$store.state.Music.addEventListener('timeupdate', () => {
-      this.currentTime = this.$store.state.Music.currentTime
-      this.duration = this.$store.state.Music.duration
+    this.$store.state.Music.addEventListener("loadeddata", () => {
+      this.duration = this.$store.state.Music.duration;
+      this.currentTime = this.$store.state.Music.currentTime;
+    });
+    this.$store.state.Music.addEventListener("timeupdate", () => {
+      this.currentTime = this.$store.state.Music.currentTime;
+      this.duration = this.$store.state.Music.duration;
 
-      localStorage.setItem('music-time', this.currentTime)
-    })
-    this.$store.state.Music.addEventListener('volumechange', () => {
-      localStorage.setItem('music-volume', this.$store.state.Music.volume)
-    })
-    this.$store.state.Music.addEventListener('ended', () => {
-      let { id, listenCount } = this.$store.state.musicFiles[
-        this.$store.state.currentMusicIndex
-      ]
-      listenCount = listenCount + 1 || 1
+      localStorage.setItem("music-time", this.currentTime);
+    });
+    this.$store.state.Music.addEventListener("volumechange", () => {
+      localStorage.setItem("music-volume", this.$store.state.Music.volume);
+    });
+    this.$store.state.Music.addEventListener("ended", () => {
+      let { id, listenCount } =
+        this.$store.state.musicFiles[this.$store.state.currentMusicIndex];
+      listenCount = listenCount + 1 || 1;
 
-      this.$db.musicFiles.update(id, { listenCount }).then(updated => {
+      this.$db.musicFiles.update(id, { listenCount }).then((updated) => {
         if (updated) {
-          this.$store.state.musicFiles[this.$store.state.currentMusicIndex].listenCount = listenCount
+          this.$store.state.musicFiles[
+            this.$store.state.currentMusicIndex
+          ].listenCount = listenCount;
         }
-      })
+      });
 
       setTimeout(() => {
-        this.next()
-      }, 3000)
-    })
+        this.next();
+      }, 3000);
+    });
 
-    ipcRenderer.on('MediaPlayer', (event, { action }) => {
+    ipcRenderer.on("MediaPlayer", (event, { action }) => {
       switch (action) {
-        case 'play/pause':
-          this.play()
-          break
-        case 'nextTrack':
-          this.next()
-          break
-        case 'prevTrack':
-          this.prev()
-          break
-        case 'volume++':
-          this.volume('++')
-          break
-        case 'volume--':
-          this.volume('--')
-          break
+        case "play/pause":
+          this.play();
+          break;
+        case "nextTrack":
+          this.next();
+          break;
+        case "prevTrack":
+          this.prev();
+          break;
+        case "volume++":
+          this.volume("++");
+          break;
+        case "volume--":
+          this.volume("--");
+          break;
       }
-    })
-  }
-}
+    });
+  },
+};
 </script>
 
-<style lang="sass" scoped>
-.player-container
-  position: fixed
-  left: 0
-  right: 0
-  bottom: 0
-  overflow: hidden
-  padding: 16px 4px 8px 4px
-  z-index: 1
-  display: flex
-  justify-content: space-around
-  flex-direction: column
-  box-shadow: 0 -4px 20px #000
-  border-top: 1px solid #333
-  .controls
-    width: 57.5%
-    margin: 0 auto
-    .btn
-      cursor: pointer
-      opacity: .7
-      transition: opacity .15s
-      svg
-        fill: white
-      &:hover, &:focus
-        opacity: 1
-  .player
-    margin: 4px 0
-    .title
-      padding: 2px
-      white-space: nowrap
-      overflow-x: auto
-      width: 100%
-      color: #fff
-      text-align: center
-    .progress, .volume
-      display: flex
-      align-items: center
-      cursor: pointer
-      position: relative
-      padding: 10px 0
-      &::before, &::after
-        font-size: 10px
-        color: white
-        position: absolute
-        pointer-events: none
-      &::before
-        left: -45px
-        content: attr(currentTime)
-      &::after
-        right: -45px
-        content: attr(duration)
-      .track-container
-        width: 100%
-        height: 4px
-        position: relative
-        background-color: lighten(black, 20%)
-        display: flex
-        .track-flow
-          // background-color: $secondary
-          background-image: radial-gradient( circle 426px at 77.9% 31.3%, rgba(255,229,131,1) 0%, rgba(249,119,0,1) 90% )
-          height: 100%
-          position: relative
-          display: flex
-          align-items: center
-          &::after // pointer
-            content: ""
-            width: 8px
-            height: 8px
-            border-radius: 2px
-            background-color: #fff
-            border: 1px solid #eee
-            cursor: pointer
-            position: absolute
-            display: block
-            right: -2px
-        .transition-flow
-          transition: width .25s
-    .progress
-      width: 50%
-      &:hover .track-flow
-        background-color: #fafafa
-    .volume-container
-      display: flex
-      align-items: center
-      position: relative
-      .volume
-        width: 120px
-        display: flex
-        &:hover .track-flow
-          background-color: #fafafa
-      svg
-        cursor: pointer
-        position: absolute
-        left: -35px
-        width: 20px
-        height: 20px
-        fill: white
-        &.layer-0
-          .layer-1, .layer-2, .layer-3
-            display: none
-        &.layer-1
-          .layer-2, .layer-3
-            display: none
-        &.layer-2
-          .layer-3
-            display: none
-    .shuffle
-      cursor: pointer
-      opacity: .5
-      transition: opacity .5s ease
-      &.active
-        opacity: 1
-      svg
-        width: 25px
-        height: 25px
-        fill: white
+<style lang="scss" scoped>
+.player-container {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  padding: 16px 4px 8px 4px;
+  z-index: 1;
+  display: flex;
+  justify-content: space-around;
+  flex-direction: column;
+  box-shadow: 0 -4px 20px #000;
+  border-top: 1px solid #333;
+  .controls {
+    width: 57.5%;
+    margin: 0 auto;
+    .btn {
+      cursor: pointer;
+      opacity: 0.7;
+      transition: opacity 0.15s;
+      svg {
+        fill: white;
+      }
+      &:hover,
+      &:focus {
+        opacity: 1;
+      }
+    }
+  }
+  .player {
+    margin: 4px 0;
+    .title {
+      padding: 2px;
+      white-space: nowrap;
+      overflow-x: auto;
+      width: 100%;
+      color: #fff;
+      text-align: center;
+    }
+    .progress,
+    .volume {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      position: relative;
+      padding: 10px 0;
+      &::before,
+      &::after {
+        font-size: 10px;
+        color: white;
+        position: absolute;
+        pointer-events: none;
+      }
+      &::before {
+        left: -45px;
+        content: attr(currentTime);
+      }
+      &::after {
+        right: -45px;
+        content: attr(duration);
+      }
+      .track-container {
+        width: 100%;
+        height: 4px;
+        position: relative;
+        background-color: lighten(black, 20%);
+        display: flex;
+        .track-flow {
+          // background-color: $secondary;
+          background-image: radial-gradient(
+            circle 426px at 77.9% 31.3%,
+            rgba(255, 229, 131, 1) 0%,
+            rgba(249, 119, 0, 1) 90%
+          );
+          height: 100%;
+          position: relative;
+          display: flex;
+          align-items: center;
+          &::after {
+            // pointer
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            background-color: #fff;
+            border: 1px solid #eee;
+            cursor: pointer;
+            position: absolute;
+            display: block;
+            right: -2px;
+          }
+        }
+        .transition-flow {
+          transition: width 0.25s;
+        }
+      }
+    }
+    .progress {
+      width: 50%;
+      &:hover .track-flow {
+        background-color: #fafafa;
+      }
+    }
+    .volume-container {
+      display: flex;
+      align-items: center;
+      position: relative;
+      .volume {
+        width: 120px;
+        display: flex;
+        &:hover .track-flow {
+          background-color: #fafafa;
+        }
+      }
+      svg {
+        cursor: pointer;
+        position: absolute;
+        left: -35px;
+        width: 20px;
+        height: 20px;
+        fill: white;
+        &.layer-0 {
+          .layer-1,
+          .layer-2,
+          .layer-3 {
+            display: none;
+          }
+        }
+        &.layer-1 {
+          .layer-2,
+          .layer-3 {
+            display: none;
+          }
+        }
+        &.layer-2 {
+          .layer-3 {
+            display: none;
+          }
+        }
+      }
+    }
+    .shuffle {
+      cursor: pointer;
+      opacity: 0.5;
+      transition: opacity 0.5s ease;
+      &.active {
+        opacity: 1;
+      }
+      svg {
+        width: 25px;
+        height: 25px;
+        fill: white;
+      }
+    }
+  }
+}
 </style>

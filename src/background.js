@@ -1,5 +1,3 @@
-'use strict'
-
 import { app, protocol, BrowserWindow, globalShortcut, ipcMain, dialog } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
@@ -12,7 +10,7 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
 
-async function createWindow () {
+async function createWindow() {
   // Create the browser window.
   const win = new BrowserWindow({
     width: 500,

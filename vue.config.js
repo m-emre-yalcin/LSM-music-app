@@ -1,6 +1,6 @@
 const path = require('path')
 
-function resolve (dir) {
+function resolve(dir) {
   return path.join(__dirname, dir)
 }
 
@@ -27,8 +27,8 @@ module.exports = {
   css: {
     sourceMap: true,
     loaderOptions: {
-      sass: {
-        prependData: '@import "./src/assets/style/main.sass"'
+      scss: {
+        prependData: "@import './src/assets/style/main.scss';"
       }
     }
   }
