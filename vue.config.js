@@ -7,7 +7,7 @@ function resolve(dir) {
 module.exports = {
   pluginOptions: {
     electronBuilder: {
-      nodeIntegration: true
+      nodeIntegration: true,
     }
   },
   chainWebpack: (config) => {
