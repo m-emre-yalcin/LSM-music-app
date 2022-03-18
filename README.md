@@ -1,6 +1,6 @@
 # Lysosome Music
 
-Just an ordinary music app for desktops made with `electron` and `vue`. I haven't tested on Linux and it's not ready for prod.
+Just an ordinary music app for desktops made with `electron` and `vue`. There are some issues and the app isn't complete.
 
 *above `node 14x` may not work*
 
